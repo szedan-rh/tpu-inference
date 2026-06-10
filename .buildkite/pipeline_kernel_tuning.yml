@@ -52,7 +52,7 @@ steps:
           set -e
           
           # Combine pip installs to save time
-          pip install --upgrade google-cloud-spanner google-api-core google-auth absl-py
+          pip install --upgrade google-cloud-spanner google-api-core google-auth absl-py tensorflow
           
           # Start with the arguments that do not follow the KERNEL_TUNING_ pattern
           PYTHON_ARGS=( 
