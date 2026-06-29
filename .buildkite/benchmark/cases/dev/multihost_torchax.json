@@ -14,7 +14,6 @@
       ],
       "env": {
         "RUN_TYPE": "DAILY",
-        "EXPECTED_ETEL": 3600000,
         "INPUT_LEN": 1024,
         "OUTPUT_LEN": 1024,
         "PREFIX_LEN": 0,
@@ -53,8 +52,7 @@
           "async-scheduling": true,
           "additional-config": "{\"sharding\": {\"sharding_strategy\": {\"enable_dp_attention\": true}}}",
           "generation-config": "gs://gpolovets-inference/deepseek/generation_configs/DeepSeek-R1",
-          "trust-remote-code": true,
-          "hf-config": "deepseek-ai/DeepSeek-R1"
+          "trust-remote-code": true
         }
       },
       "client_command_options": {
@@ -77,7 +75,6 @@
       ],
       "env": {
         "RUN_TYPE": "DAILY",
-        "EXPECTED_ETEL": 3600000,
         "INPUT_LEN": 1024,
         "OUTPUT_LEN": 8192,
         "PREFIX_LEN": 0,
@@ -103,7 +100,7 @@
           "model": "/mnt/disks/checkpoint/hub/models--deepseek-ai--DeepSeek-R1/snapshots/56d4cbbb4d29f4355bab4b9a39ccb717a14ad5ad/",
           "served-model-name": "deepseek-ai/DeepSeek-R1",
           "seed": 42,
-          "max-num-seqs": 160,
+          "max-num-seqs": 128,
           "max-num-batched-tokens": 512,
           "tensor-parallel-size": {
             "v7x-16": 16
@@ -117,7 +114,7 @@
           "additional-config": "{\"sharding\": {\"sharding_strategy\": {\"enable_dp_attention\": true}}}",
           "generation-config": "gs://gpolovets-inference/deepseek/generation_configs/DeepSeek-R1",
           "trust-remote-code": true,
-          "hf-config": "deepseek-ai/DeepSeek-R1"
+          "api-server-count": 3
         }
       },
       "client_command_options": {
@@ -127,7 +124,7 @@
           "dataset-name": "random",
           "random-input-len": 1024,
           "random-output-len": 8192,
-          "num-prompts": 2560,
+          "num-prompts": 2048,
           "ignore-eos": true,
           "trust-remote-code": true,
           "mmlu-output-len": 4
@@ -141,7 +138,6 @@
       ],
       "env": {
         "RUN_TYPE": "DAILY",
-        "EXPECTED_ETEL": 3600000,
         "INPUT_LEN": 1024,
         "OUTPUT_LEN": 8192,
         "PREFIX_LEN": 0,
@@ -182,7 +178,6 @@
           "additional-config": "{\"sharding\": {\"sharding_strategy\": {\"enable_dp_attention\": true}}}",
           "generation-config": "gs://gpolovets-inference/deepseek/generation_configs/DeepSeek-R1",
           "trust-remote-code": true,
-          "hf-config": "deepseek-ai/DeepSeek-R1",
           "api-server-count": 3
         }
       },
@@ -207,7 +202,6 @@
       ],
       "env": {
         "RUN_TYPE": "DAILY",
-        "EXPECTED_ETEL": 3600000,
         "INPUT_LEN": 8192,
         "OUTPUT_LEN": 1024,
         "PREFIX_LEN": 0,
@@ -246,8 +240,7 @@
           "async-scheduling": true,
           "additional-config": "{\"sharding\": {\"sharding_strategy\": {\"enable_dp_attention\": true}}}",
           "generation-config": "gs://gpolovets-inference/deepseek/generation_configs/DeepSeek-R1",
-          "trust-remote-code": true,
-          "hf-config": "deepseek-ai/DeepSeek-R1"
+          "trust-remote-code": true
         }
       },
       "client_command_options": {
@@ -270,7 +263,6 @@
       ],
       "env": {
         "RUN_TYPE": "DAILY",
-        "EXPECTED_ETEL": 3600000,
         "INPUT_LEN": 1024,
         "OUTPUT_LEN": 8192,
         "PREFIX_LEN": 0,
@@ -288,11 +280,21 @@
           },
           "max-model-len": 10240,
           "max-num-seqs": 128,
-          "max-num-batched-tokens": 1024
+          "max-num-batched-tokens": 1024,
+          "seed": 42,
+          "kv-cache-dtype": "fp8",
+          "gpu-memory-utilization": 0.90,
+          "trust-remote-code": true,
+          "async-scheduling": true,
+          "no-enable-prefix-caching": true
         },
         "env": {
           "VLLM_ENGINE_READY_TIMEOUT_S": "10800",
-          "RAY_LOG_TO_STDERR": "1"
+          "RAY_LOG_TO_STDERR": "1",
+          "NEW_MODEL_DESIGN": "0",
+          "MODEL_IMPL_TYPE": "vllm",
+          "VLLM_DISABLE_SHARED_EXPERTS_STREAM": 1,
+          "TPU_BACKEND_TYPE": "jax"
         }
       },
       "client_command_options": {
@@ -303,7 +305,8 @@
           "random-input-len": 1024,
           "random-output-len": 8192,
           "num-prompts": 128,
-          "ignore-eos": true
+          "ignore-eos": true,
+          "trust-remote-code": true
         }
       }
     },
