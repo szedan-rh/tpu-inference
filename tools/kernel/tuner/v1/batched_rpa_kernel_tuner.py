@@ -119,7 +119,7 @@ def _generate_batched_rpa_inputs_prefill(tuning_key: TuningKey,
         (num_page_indices, page_size, cdiv(
             num_kv_heads * 2, kv_packing), kv_packing, head_dim), kv_dtype)
 
-    max_input_len = 8192  # (TODO): This depends on the bench serve command line input-len flag
+    max_input_len = 1024  # (TODO): This depends on the bench serve command line input-len flag
     max_prefill_seqs = min(num_seqs, total_q_tokens // max_input_len)
     remaining_tokens = total_q_tokens - max_prefill_seqs * max_input_len
     max_decode_seqs = min(num_seqs - max_prefill_seqs, remaining_tokens)
