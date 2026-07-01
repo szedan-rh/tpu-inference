@@ -635,11 +635,8 @@ class TPUModelRunner(KVConnectorModelRunnerMixin, LoRAModelRunnerMixin):
             and len(self.vllm_config.sharding_config.device_indexes) > 0)
 
         if enforce_device_order:
-            axis_types = (mesh_lib.AxisType.Auto, ) * len(mesh_shape)
-            return jax.make_mesh(mesh_shape,
-                                 MESH_AXIS_NAMES_2D,
-                                 axis_types,
-                                 devices=self.devices)
+            ordered_devices = np.array(self.devices).reshape(mesh_shape)
+            return mesh_lib.Mesh(ordered_devices, MESH_AXIS_NAMES_2D)
         else:
             return make_optimized_mesh(mesh_shape,
                                        MESH_AXIS_NAMES_2D,
