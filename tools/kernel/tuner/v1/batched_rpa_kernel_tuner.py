@@ -129,7 +129,7 @@ def _generate_batched_rpa_inputs_prefill(tuning_key: TuningKey,
     kv_lens = [max_input_len
                ] * max_prefill_seqs + [0] * (num_seqs - max_prefill_seqs)
 
-    cu_q_lens = [1] * (num_seqs + 1)
+    cu_q_lens = [total_q_tokens] * (num_seqs + 1)
     cu_q_lens[0] = 0
     for i in range(1, max_prefill_seqs + 1):
         cu_q_lens[i] = cu_q_lens[i - 1] + max_input_len
@@ -184,11 +184,55 @@ class BatchedRpaKernelTuner(KernelTunerBase):
             tuning_key_class=TuningKey,
             tunable_params_class=TunableParams,
             kernel_tuner_name="batched_rpa_kernel_tuner",
-            jit_kernel_pattern=r"(jit_ragged_paged_attention\()",
+            jit_kernel_pattern=r"RPAm-",  #r"(jit_ragged_paged_attention\()",
         )
         super().__init__(tuner_config=self.tuner_config, run_config=run_config)
 
     def generate_cases(self) -> list[TuningCase]:
+        from tools.kernel.tuner.v1.common.tuning_case_logger import \
+            TuningCaseLogger
+        from tpu_inference.kernels.experimental.batched_rpa.tuned_params import (
+            TunableParams, TuningKey)
+        tuning_case_logger = TuningCaseLogger(
+            '/mnt/disks/persist/batched_rpa_kernel_tuning/tpu-inference/tools/kernel/tuner/v1/batched_rpa_gemma4_tuning_cases.json',
+            key_class=TuningKey,
+            params_class=TunableParams)
+        cases = [
+            TuningCase(tuning_key=case[0], tunable_params=case[1])
+            for case in tuning_case_logger.get_logged_tuning_cases()
+            if case[0].total_q_tokens >= 16 *
+            1024 and case[0].case == 'prefill'
+        ]
+        for i in range(len(cases)):
+            tuning_key = cases[i].tuning_key
+            cases.extend(self.get_search_space(tuning_key))
+        # cases = cases[:3]
+        logger.info(f"Loaded {len(cases)} tuning cases from log file.")
+        return cases
+
+    def get_search_space(self, tuning_key: TuningKey) -> list[TunableParams]:
+        # For the batched RPA kernel, we will use the logged tuned parameters as the
+        tuning_cases = []
+        for prefill_batch_size in [1, 2, 3]:
+            for bq_sz in range(256, 2049, 256):
+                for bq_c_sz in [8, 16, 32, 64, 128]:
+                    if bq_sz % bq_c_sz != 0:
+                        continue
+                    for bkv_sz in range(256, 2048, 256):
+                        if bkv_sz % tuning_key.page_size != 0:  # requirement from scheduler
+                            continue
+                        for n_buffer in [2, 3]:
+                            tuning_cases.append(
+                                TuningCase(tuning_key=tuning_key,
+                                           tunable_params=TunableParams(
+                                               bq_sz=bq_sz,
+                                               bq_c_sz=bq_c_sz,
+                                               bkv_sz=bkv_sz,
+                                               batch_size=prefill_batch_size,
+                                               n_buffer=n_buffer)))
+        return tuning_cases
+
+    def generate_cases_OLD(self) -> list[TuningCase]:
         tuning_cases = []
         for log_entry in ENTRIES:
             model_config = log_entry.model
@@ -208,28 +252,7 @@ class BatchedRpaKernelTuner(KernelTunerBase):
                 TuningCase(tuning_key=prefill_tuning_key,
                            tunable_params=prefill_tunable_params))
 
-            bq_c_sz = prefill_tunable_params.bq_c_sz
-            bkv_sz = prefill_tunable_params.bkv_sz
-            n_buffer = prefill_tunable_params.n_buffer
-
-            for prefill_batch_size in [1, 2, 3]:
-                for bq_sz in range(256, 2049, 256):
-                    for bq_c_sz in [8, 16, 32, 64, 128]:
-                        if bq_sz % bq_c_sz != 0:
-                            continue
-                        for bkv_sz in range(256, 2048, 256):
-                            if bkv_sz % prefill_tuning_key.page_size != 0:  # requirement from scheduler
-                                continue
-                            for n_buffer in [2, 3]:
-                                tuning_cases.append(
-                                    TuningCase(
-                                        tuning_key=prefill_tuning_key,
-                                        tunable_params=TunableParams(
-                                            bq_sz=bq_sz,
-                                            bq_c_sz=bq_c_sz,
-                                            bkv_sz=bkv_sz,
-                                            batch_size=prefill_batch_size,
-                                            n_buffer=n_buffer)))
+            tuning_cases.extend(self.get_search_space(prefill_tuning_key))
 
         logger.info(f"Generated {len(tuning_cases)} tuning cases.")
         return tuning_cases
@@ -286,4 +309,5 @@ class BatchedRpaKernelTuner(KernelTunerBase):
             logger.warning(
                 f"Failed with {tuning_key=}, {tunable_params=}, got error: {err=}"
             )
+            assert False, f"Kernel run failed with tuning key & tunable params:\nTuningKey=\n{tuning_key}, TunableParams=\n{tunable_params}, got error: {err=}"
             return TuningStatus.UNKNOWN_ERROR, float("inf"), float("inf")

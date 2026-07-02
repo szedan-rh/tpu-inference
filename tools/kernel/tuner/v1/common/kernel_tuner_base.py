@@ -24,8 +24,6 @@ import jax
 import yaml
 from absl import flags
 
-from tools.kernel.tuner.v1.common.utils import find_events_by_pattern
-
 FLAGS = flags.FLAGS
 
 logger = logging.getLogger(__name__)
@@ -547,6 +545,7 @@ class KernelTunerBase(ABC):
 
             measurement_iters = 100
             if self.tuner_config.jit_kernel_pattern is not None:
+                # xprof_folder = os.path.join(self.xprof_dir, f"{tuning_key.total_q_tokens=}_{tuning_key.sliding_window=}")
                 with jax.profiler.trace(self.xprof_dir,
                                         create_perfetto_link=False):
                     status, average_latency_ns = run_and_record_failure(
@@ -567,6 +566,8 @@ class KernelTunerBase(ABC):
                 continue
 
             if self.tuner_config.jit_kernel_pattern is not None:
+                from tools.kernel.tuner.v1.common.utils import \
+                    find_events_by_pattern
                 matching_events, average_latency_us = find_events_by_pattern(
                     self.xprof_dir, self.tuner_config.jit_kernel_pattern)
                 if len(matching_events) != measurement_iters:
