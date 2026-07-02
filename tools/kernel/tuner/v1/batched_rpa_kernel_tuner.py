@@ -213,7 +213,7 @@ class BatchedRpaKernelTuner(KernelTunerBase):
     def get_search_space(self, tuning_key: TuningKey) -> list[TunableParams]:
         # For the batched RPA kernel, we will use the logged tuned parameters as the
         tuning_cases = []
-        for prefill_batch_size in [1, 2, 3]:
+        for prefill_batch_size in [1, 2, 3, 4]:
             for bq_sz in range(256, 2049, 256):
                 for bq_c_sz in [8, 16, 32, 64, 128]:
                     if bq_sz % bq_c_sz != 0:
@@ -221,7 +221,7 @@ class BatchedRpaKernelTuner(KernelTunerBase):
                     for bkv_sz in range(256, 2048, 256):
                         if bkv_sz % tuning_key.page_size != 0:  # requirement from scheduler
                             continue
-                        for n_buffer in [2, 3]:
+                        for n_buffer in [2, 3, 4]:
                             tuning_cases.append(
                                 TuningCase(tuning_key=tuning_key,
                                            tunable_params=TunableParams(
