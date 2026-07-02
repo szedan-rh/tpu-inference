@@ -194,7 +194,7 @@ class BatchedRpaKernelTuner(KernelTunerBase):
         from tpu_inference.kernels.experimental.batched_rpa.tuned_params import (
             TunableParams, TuningKey)
         tuning_case_logger = TuningCaseLogger(
-            '/mnt/disks/persist/batched_rpa_kernel_tuning/tpu-inference/tools/kernel/tuner/v1/batched_rpa_gemma4_tuning_cases.json',
+            '/workspace/tools/kernel/tuner/v1/batched_rpa_gemma4_tuning_cases.json',
             key_class=TuningKey,
             params_class=TunableParams)
         cases = [
