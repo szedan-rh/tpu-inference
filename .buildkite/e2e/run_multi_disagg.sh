@@ -312,7 +312,7 @@ wait_for_server_remote() {
 vllm_server_process_alive() {
   local host=$1
   local port=$2
-  local process_check="pgrep -af 'vllm serve' | grep -q -- '--port ${port}'"
+  local process_check="pgrep -af '[v]llm serve' | grep -q -- '--port ${port}'"
 
   if [[ "$host" == "localhost" || "$host" == "127.0.0.1" || "$host" == "$HEAD_INTERNAL_IP" ]]; then
     docker exec node bash -c "$process_check" >/dev/null 2>&1
